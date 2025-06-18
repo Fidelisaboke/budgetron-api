@@ -43,7 +43,7 @@ cp .env.example .env
 
 Set the environment variables in the `.env` file.
 
-- Create the `.flaskenv` file by copying the `.env.flaskenv` file:
+- Create the `.flaskenv` file by copying the `.flaskenv.example` file:
 ```bash
 cp .flaskenv.example .flaskenv
 ```
