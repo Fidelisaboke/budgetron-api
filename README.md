@@ -36,8 +36,37 @@ python3 -m venv .venv
 pip install -r requirements.txt
 ```
 
-## Usage
-- Run the `app.py` file to start the application:
+- Create the `.env` file by copying the `.env.example` file:
 ```bash
-python3 app.py
+cp .env.example .env
+```
+
+Set the environment variables in the `.env` file.
+
+- Create the `.flaskenv` file by copying the `.env.flaskenv` file:
+```bash
+cp .flaskenv.example .flaskenv
+```
+This step is optional, if you need extra configuration, and to avoid having to do 
+`--app budgetron` when writing the flask commands.
+
+- Create `migrations/` directory if not present in the project:
+```bash
+flask db init
+```
+
+- Generate migration scripts:
+```bash
+flask db migrate -m "Initial"
+```
+
+- Apply migrations to the database:
+```bash
+flask db upgrade
+```
+
+## Usage
+- Run the application specified in the `.flaskenv`:
+```bash
+flask run
 ```
