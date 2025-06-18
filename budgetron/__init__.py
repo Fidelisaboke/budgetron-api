@@ -4,31 +4,29 @@ from flask import Flask, render_template
 from flask_migrate import Migrate
 from flask_restful import Api
 
+from .config import Config
 from .resources import (
     UserResource, CategoryResource, TransactionResource, ReportResource
 )
 from .utils.db import db
+from .utils.security import bcrypt
 
 migrate = Migrate()
 
-def create_app(test_config=None):
+def create_app():
     app = Flask(__name__, instance_relative_config=True)
 
     # Configurations
     app.config.from_object("budgetron.config.Config")
 
-    # Initialize database and migrations
+    # App extensions
+    api = Api(app)
     db.init_app(app)
     migrate.init_app(app, db)
+    bcrypt.init_app(app)
 
-    api = Api(app)
 
-    # Test configuration
-    if test_config is None:
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        app.config.from_mapping(test_config)
-
+    # Create instance directory
     try:
         os.makedirs(app.instance_path)
     except OSError:

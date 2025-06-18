@@ -1,8 +1,12 @@
 from flask import request
 from flask_restful import Resource, abort
+from marshmallow import ValidationError
+from sqlalchemy.exc import IntegrityError
+
 from .models import User, Category, Transaction, Report
 from .schemas import UserSchema, CategorySchema, TransactionSchema, ReportSchema
 from .utils.db import db
+from .utils.security import bcrypt
 
 # User Schema
 user_schema = UserSchema()
@@ -21,26 +25,65 @@ class UserResource(Resource):
         return user_schema.dump(user), 200
 
     def post(self):
-        data = request.get_json()
-        user_data = user_schema.load(data)
-        new_user = User(**user_data)
-        db.session.add(new_user)
-        db.session.commit()
-        return user_schema.dump(new_user), 201
+        try:
+            data = request.get_json()
+            user_data = user_schema.load(data)
+
+            new_user = User()
+            new_user.username = user_data['username']
+            new_user.email = user_data['email']
+            new_user.password = bcrypt.generate_password_hash(user_data['password']).decode('utf-8')
+
+            db.session.add(new_user)
+            db.session.commit()
+
+            return user_schema.dump(new_user), 201
+
+        except ValidationError as err:
+            return {"errors" :err.messages}, 400
+
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "Username or email already exists."}, 409
 
     def patch(self, user_id):
-        user = User.query.filter_by(id=user_id).first()
-        if user is None:
-            abort(404, message="User not found.")
+        try:
+            user = User.query.filter_by(id=user_id).first()
+            if user is None:
+                abort(404, message="User not found.")
 
-        data = request.get_json()
-        user.username = data.get("username", user.username)
-        user.email = data.get("email", user.email)
-        db.session.commit()
-        return user_schema.dump(user), 200
+            data = request.get_json()
+            user_data = user_schema.load(data, partial=True)
+
+            if "username" in user_data:
+                username = user_data["username"]
+                existing = User.query.filter(User.username == username, User.id != user.id).first()
+                if existing:
+                    return {"error": "Username already exists."}, 409
+                user.username = username
+
+            if "email" in user_data:
+                email = user_data["email"]
+                existing = User.query.filter(User.email == email, User.id != user.id).first()
+                if existing:
+                    return {"error": "Email already exists."}, 409
+                user.email = email
+
+            if "password" in user_data:
+                user.password = bcrypt.generate_password_hash(user_data["password"]).decode('utf-8')
+
+            db.session.commit()
+            return user_schema.dump(user), 200
+
+        except ValidationError as err:
+            return {"errors" :err.messages}, 400
+
+        except IntegrityError:
+            db.session.rollback()
+            return {"error": "An error occurred when saving user details."}, 409
 
     def delete(self, user_id):
-        user = User.query.get_or_404(user_id)
+        user = User.query.filter_by(user_id).first()
         if user is None:
             abort(404, message="User not found.")
 
