@@ -1,7 +1,6 @@
 from flask import request
 from flask_restful import Resource, abort
 from marshmallow import ValidationError
-from sqlalchemy.exc import IntegrityError
 
 from budgetron.models import Category
 from budgetron.schemas import CategorySchema
@@ -25,23 +24,29 @@ class CategoryResource(Resource):
         return category_schema.dump(category), 200
 
     def post(self):
-        data = request.get_json()
-        category_data = category_schema.load(data)
-        new_category = Category(**category_data)
-        db.session.add(new_category)
-        db.session.commit()
-        return category_schema.dump(new_category), 201
+        try:
+            data = request.get_json()
+            category_data = category_schema.load(data)
+            new_category = Category(**category_data)
+            db.session.add(new_category)
+            db.session.commit()
+            return category_schema.dump(new_category), 201
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
 
     def patch(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
             abort(404, message="Category not found.")
 
-        data = request.get_json()
-        category.name = data.get("name", category.name)
-        category.type = data.get("type", category.type)
-        db.session.commit()
-        return category_schema.dump(category), 200
+        try:
+            data = request.get_json()
+            category.name = data.get("name", category.name)
+            category.type = data.get("type", category.type)
+            db.session.commit()
+            return category_schema.dump(category), 200
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
 
     def delete(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
