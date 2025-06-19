@@ -31,6 +31,7 @@ class CategoryResource(Resource):
             db.session.add(new_category)
             db.session.commit()
             return category_schema.dump(new_category), 201
+
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
@@ -41,10 +42,21 @@ class CategoryResource(Resource):
 
         try:
             data = request.get_json()
-            category.name = data.get("name", category.name)
-            category.type = data.get("type", category.type)
+            category_data = category_schema.load(data, partial=True)
+
+            if "name" in category_data:
+                name = category_data["name"]
+                existing = Category.query.filter(Category.name == name, Category.id != category.id).first()
+                if existing:
+                    return {"error": "Category already exists."}, 409
+                category.name = name
+
+            if "type" in category_data:
+                category.type = category_data["type"]
+
             db.session.commit()
             return category_schema.dump(category), 200
+
         except ValidationError as err:
             return {"errors": err.messages}, 400
 

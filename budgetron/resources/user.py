@@ -82,7 +82,7 @@ class UserResource(Resource):
             return {"error": "An error occurred when saving user details."}, 409
 
     def delete(self, user_id):
-        user = User.query.filter_by(user_id).first()
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             abort(404, message="User not found.")
 

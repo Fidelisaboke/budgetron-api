@@ -37,6 +37,11 @@ class CategorySchema(Schema):
     type = fields.String(required=True, validate=validate.OneOf(["income", "expense"]))
     last_updated = fields.DateTime(dump_only=True)
 
+    @validates('name')
+    def validate_unique_name(self, name, data_key):
+        if Category.query.filter_by(name=name).first():
+            raise ValidationError("Category name already exists.")
+
 
 class TransactionSchema(Schema):
     id = fields.Integer(dump_only=True)
@@ -48,11 +53,13 @@ class TransactionSchema(Schema):
 
     @validates('user_id')
     def validate_user_id_exists(self, user_id, data_key):
-        return User.query.filter_by(id=user_id).first() is not None
+        if User.query.filter_by(id=user_id).first() is None:
+            raise ValidationError("User does not exist.")
 
     @validates('category_id')
     def validate_category_id_exists(self, category_id, data_key):
-        return Category.query.filter_by(id=category_id).first() is not None
+        if Category.query.filter_by(id=category_id).first() is None:
+            raise ValidationError("Category does not exist.")
 
 
 class ReportSchema(Schema):
@@ -64,4 +71,5 @@ class ReportSchema(Schema):
 
     @validates('user_id')
     def validate_user_id_exists(self, user_id, data_key):
-        return User.query.filter_by(id=user_id).first() is not None
+        if User.query.filter_by(id=user_id).first() is None:
+            raise ValidationError("User does not exist.")

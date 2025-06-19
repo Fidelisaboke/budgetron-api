@@ -2,7 +2,7 @@ from flask import request
 from flask_restful import Resource, abort
 from marshmallow import ValidationError
 
-from budgetron.models import Transaction
+from budgetron.models import Transaction, User, Category
 from budgetron.schemas import TransactionSchema
 from budgetron.utils.db import db
 
@@ -31,6 +31,7 @@ class TransactionResource(Resource):
             db.session.add(new_transaction)
             db.session.commit()
             return transaction_schema.dump(new_transaction), 201
+
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
@@ -41,12 +42,29 @@ class TransactionResource(Resource):
 
         try:
             data = request.get_json()
-            transaction.user_id = data.get("user_id", transaction.user_id)
-            transaction.category_id = data.get("category_id", transaction.category_id)
-            transaction.amount = data.get("amount", transaction.amount)
-            transaction.description = data.get("description", transaction.description)
+            transaction_data = transaction_schema.load(data, partial=True)
+
+            if "user_id" in transaction_data:
+                existing = User.query.filter_by(id=transaction_data["user_id"]).first()
+                if not existing:
+                    abort(404, message="User not found.")
+                transaction.user_id = transaction_data["user_id"]
+
+            if "category_id" in transaction_data:
+                existing = Category.query.filter_by(id=transaction_data["category_id"]).first()
+                if not existing:
+                    abort(404, message="Category not found.")
+                transaction.category_id = transaction_data["category_id"]
+
+            if "amount" in transaction_data:
+                transaction.amount = transaction_data["amount"]
+
+            if "description" in transaction_data:
+                transaction.description = transaction_data["description"]
+
             db.session.commit()
             return transaction_schema.dump(transaction), 200
+
         except ValidationError as err:
             return {"errors": err.messages}, 400
 

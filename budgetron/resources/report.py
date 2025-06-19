@@ -2,7 +2,7 @@ from flask import request
 from flask_restful import Resource, abort
 from marshmallow import ValidationError
 
-from budgetron.models import Report
+from budgetron.models import Report, User
 from budgetron.schemas import ReportSchema
 from budgetron.utils.db import db
 
@@ -41,10 +41,23 @@ class ReportResource(Resource):
 
         try:
             data = request.get_json()
-            report.user_id = data.get("user_id", report.user_id)
-            report.format = data.get("format", report.format)
-            report.file_url = data.get("file_url", report.file_url)
+            report_data = report_schema.load(data, partial=True)
+
+            if "user_id" in report_data:
+                existing = User.query.filter_by(id=report_data["user_id"]).first()
+                if not existing:
+                    abort(404, message="User not found.")
+                report.user_id = report_data["user_id"]
+
+            if "format" in report_data:
+                report.format = report_data["format"]
+
+            if "file_url" in report_data:
+                report.file_url = report_data["file_url"]
+
             db.session.commit()
+            return report_schema.dump(report), 200
+        
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
