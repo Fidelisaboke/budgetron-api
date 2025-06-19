@@ -40,7 +40,6 @@ class TransactionResource(Resource):
         transaction.user_id = data.get("user_id", transaction.user_id)
         transaction.category_id = data.get("category_id", transaction.category_id)
         transaction.amount = data.get("amount", transaction.amount)
-        transaction.type = data.get("type", transaction.type)
         transaction.description = data.get("description", transaction.description)
         db.session.commit()
         return transaction_schema.dump(transaction), 200

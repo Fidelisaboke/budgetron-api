@@ -36,7 +36,6 @@ class Transaction(db.Model):
     user_id = db.Column(db.Integer)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
-    type = db.Column(db.String(10), nullable=False)
     description = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
 
