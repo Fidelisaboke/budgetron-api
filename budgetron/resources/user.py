@@ -10,6 +10,7 @@ from budgetron.utils.db import db
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
+
 class UserResource(Resource):
     def get(self, user_id=None):
         if user_id is None:
@@ -38,7 +39,7 @@ class UserResource(Resource):
             return user_schema.dump(new_user), 201
 
         except ValidationError as err:
-            return {"errors" :err.messages}, 400
+            return {"errors": err.messages}, 400
 
         except IntegrityError:
             db.session.rollback()
@@ -74,7 +75,7 @@ class UserResource(Resource):
             return user_schema.dump(user), 200
 
         except ValidationError as err:
-            return {"errors" :err.messages}, 400
+            return {"errors": err.messages}, 400
 
         except IntegrityError:
             db.session.rollback()

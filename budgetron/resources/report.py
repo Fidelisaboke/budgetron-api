@@ -10,6 +10,7 @@ from budgetron.utils.db import db
 report_schema = ReportSchema()
 reports_schema = ReportSchema(many=True)
 
+
 class ReportResource(Resource):
     def get(self, report_id=None):
         if report_id is None:

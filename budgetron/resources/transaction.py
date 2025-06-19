@@ -10,6 +10,7 @@ from budgetron.utils.db import db
 transaction_schema = TransactionSchema()
 transactions_schema = TransactionSchema(many=True)
 
+
 class TransactionResource(Resource):
     def get(self, transaction_id=None):
         if transaction_id is None:
