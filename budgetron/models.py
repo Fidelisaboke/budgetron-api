@@ -9,6 +9,9 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
+    transactions = db.relationship('Transaction', backref='user', lazy='dynamic')
+    reports = db.relationship('Report', backref='user', lazy='dynamic')
+
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -26,6 +29,8 @@ class Category(db.Model):
     type = db.Column(db.String(10), nullable=False)
     last_updated = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
+    transactions = db.relationship('Transaction', backref='category', lazy='dynamic')
+
     def __repr__(self):
         return f'<Category {self.id}>'
 
@@ -33,7 +38,7 @@ class Category(db.Model):
 class Transaction(db.Model):
     __tablename__ = 'transactions'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -46,7 +51,7 @@ class Transaction(db.Model):
 class Report(db.Model):
     __tablename__ = 'reports'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     format = db.Column(db.String(10), nullable=False)
     file_url = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
