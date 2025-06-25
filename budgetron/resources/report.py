@@ -1,5 +1,6 @@
 from flask import request
 from flask_restful import Resource, abort
+from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
 
 from budgetron.models import Report, User
@@ -12,6 +13,7 @@ reports_schema = ReportSchema(many=True)
 
 
 class ReportResource(Resource):
+    @jwt_required()
     def get(self, report_id=None):
         if report_id is None:
             reports = Report.query.all()
@@ -23,6 +25,7 @@ class ReportResource(Resource):
 
         return report_schema.dump(report), 200
 
+    @jwt_required()
     def post(self):
         try:
             data = request.get_json()
@@ -34,6 +37,7 @@ class ReportResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+    @jwt_required()
     def patch(self, report_id):
         report = Report.query.filter_by(id=report_id).first()
         if report is None:
@@ -61,6 +65,7 @@ class ReportResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+    @jwt_required()
     def delete(self, report_id):
         report = Report.query.filter_by(id=report_id).first()
         if report is None:

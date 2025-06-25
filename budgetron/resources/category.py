@@ -1,5 +1,6 @@
 from flask import request
 from flask_restful import Resource, abort
+from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
 
 from budgetron.models import Category
@@ -12,6 +13,7 @@ categories_schema = CategorySchema(many=True)
 
 
 class CategoryResource(Resource):
+    @jwt_required()
     def get(self, category_id=None):
         if category_id is None:
             categories = Category.query.all()
@@ -23,6 +25,7 @@ class CategoryResource(Resource):
 
         return category_schema.dump(category), 200
 
+    @jwt_required()
     def post(self):
         try:
             data = request.get_json()
@@ -35,6 +38,7 @@ class CategoryResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+    @jwt_required()
     def patch(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
@@ -60,6 +64,7 @@ class CategoryResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+    @jwt_required()
     def delete(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:

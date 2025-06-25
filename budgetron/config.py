@@ -12,3 +12,6 @@ class Config:
     # SQLAlchemy Configuration
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # JWT Authentication Configuration
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")

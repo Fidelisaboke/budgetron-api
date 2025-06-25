@@ -1,4 +1,5 @@
 from flask import request
+from flask_jwt_extended import jwt_required
 from flask_restful import Resource, abort
 from marshmallow import ValidationError
 
@@ -12,6 +13,7 @@ transactions_schema = TransactionSchema(many=True)
 
 
 class TransactionResource(Resource):
+    @jwt_required()
     def get(self, transaction_id=None):
         if transaction_id is None:
             transactions = Transaction.query.all()
@@ -23,6 +25,7 @@ class TransactionResource(Resource):
 
         return transaction_schema.dump(transaction), 200
 
+    @jwt_required()
     def post(self):
         try:
             data = request.get_json()
@@ -35,6 +38,7 @@ class TransactionResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+    @jwt_required()
     def patch(self, transaction_id):
         transaction = Transaction.query.filter_by(id=transaction_id).first()
         if transaction is None:
@@ -68,6 +72,7 @@ class TransactionResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+    @jwt_required()
     def delete(self, transaction_id):
         transaction = Transaction.query.filter_by(id=transaction_id).first()
         if transaction is None:

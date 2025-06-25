@@ -1,4 +1,5 @@
 from flask import request
+from flask_jwt_extended import jwt_required
 from flask_restful import Resource, abort
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +13,7 @@ users_schema = UserSchema(many=True)
 
 
 class UserResource(Resource):
+    @jwt_required()
     def get(self, user_id=None):
         if user_id is None:
             users = User.query.all()
@@ -23,6 +25,7 @@ class UserResource(Resource):
 
         return user_schema.dump(user), 200
 
+    @jwt_required()
     def post(self):
         try:
             data = request.get_json()
@@ -45,6 +48,7 @@ class UserResource(Resource):
             db.session.rollback()
             return {"error": "Username or email already exists."}, 409
 
+    @jwt_required()
     def patch(self, user_id):
         try:
             user = User.query.filter_by(id=user_id).first()
@@ -81,6 +85,7 @@ class UserResource(Resource):
             db.session.rollback()
             return {"error": "An error occurred when saving user details."}, 409
 
+    @jwt_required()
     def delete(self, user_id):
         user = User.query.filter_by(id=user_id).first()
         if user is None:

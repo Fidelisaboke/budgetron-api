@@ -6,10 +6,17 @@ from flask_restful import Api
 
 from .config import Config
 from .resources import (
-    UserResource, CategoryResource, TransactionResource, ReportResource
+    LoginResource,
+    RegisterResource,
+    ProfileResource,
+    UserResource,
+    CategoryResource,
+    TransactionResource,
+    ReportResource
 )
 from .utils.db import db
 from .utils.security import bcrypt
+from .utils.jwt import jwt
 
 migrate = Migrate()
 
@@ -24,7 +31,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
-
+    jwt.init_app(app)
 
     # Create instance directory
     try:
@@ -33,6 +40,9 @@ def create_app():
         pass
 
     # Resources
+    api.add_resource(LoginResource, '/api/auth/login/')
+    api.add_resource(RegisterResource, '/api/auth/register/')
+    api.add_resource(ProfileResource, '/api/auth/me/')
     api.add_resource(UserResource, '/api/users/', '/api/users/<int:user_id>')
     api.add_resource(CategoryResource, '/api/categories/', '/api/categories/<int:category_id>')
     api.add_resource(TransactionResource, '/api/transactions/', '/api/transactions/<int:transaction_id>')
