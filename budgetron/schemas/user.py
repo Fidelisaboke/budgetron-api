@@ -31,6 +31,7 @@ class BaseUserSchema(Schema):
         if User.query.filter_by(email=email).first():
             raise ValidationError("Email is already taken.")
 
+
 class UserSchema(BaseUserSchema):
     id = fields.Integer(dump_only=True)
     roles = fields.Method("get_roles", deserialize="load_roles")

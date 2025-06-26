@@ -6,6 +6,7 @@ from budgetron.schemas import UserSchema
 
 user_schema = UserSchema()
 
+
 class ProfileResource(Resource):
     @jwt_required()
     def get(self):

@@ -1,6 +1,7 @@
 from budgetron.models import Role
 from budgetron.utils.db import db
 
+
 def seed_roles():
     roles = ['admin', 'user']
     for role_name in roles:

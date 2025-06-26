@@ -58,7 +58,7 @@ def create_app():
 
     # User resource
     api.add_resource(UserListResource, '/api/auth/users/')
-    api.add_resource(UserDetailResource,  '/api/users/<int:user_id>')
+    api.add_resource(UserDetailResource, '/api/users/<int:user_id>')
 
     # Category resource
     api.add_resource(CategoryListResource, '/api/categories/')

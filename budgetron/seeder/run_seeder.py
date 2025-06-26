@@ -5,6 +5,7 @@ SEEDERS = {
     "all": lambda: [f() for f in [seed_roles]],
 }
 
+
 def run_seed(name="all"):
     from budgetron import create_app
 

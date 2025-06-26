@@ -3,6 +3,7 @@ from flask import g, request
 
 logger = logging.getLogger(__name__)
 
+
 def log_event(action: str, user=None, level: str = "info", status: str = "success", details: dict = None):
     """
     Logs a structured event message with optional user, status, and extra details.

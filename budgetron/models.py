@@ -1,6 +1,7 @@
 from budgetron.utils.security import bcrypt
 from budgetron.utils.db import db
 
+
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
@@ -9,11 +10,13 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
+
 user_roles = db.Table(
     'user_roles',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'))
 )
+
 
 class User(db.Model):
     __tablename__ = 'users'

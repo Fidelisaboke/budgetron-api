@@ -13,6 +13,7 @@ login_schema = LoginSchema()
 register_schema = RegisterSchema()
 user_schema = UserSchema(only=('id', 'username', 'email'))
 
+
 class LoginResource(Resource):
     def post(self):
         try:

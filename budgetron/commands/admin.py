@@ -6,6 +6,7 @@ from marshmallow import ValidationError
 from budgetron.models import User, Role, db
 from budgetron.schemas import UserSchema
 
+
 class CreateAdminCommand(click.Command):
     def __init__(self):
         super().__init__(
