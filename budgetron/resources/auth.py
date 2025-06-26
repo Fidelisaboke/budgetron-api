@@ -5,7 +5,7 @@ from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
 from budgetron.schemas import UserSchema, LoginSchema, RegisterSchema
-from budgetron.models import User
+from budgetron.models import User, Role
 from budgetron.utils.db import db
 
 login_schema = LoginSchema()
@@ -40,10 +40,15 @@ class RegisterResource(Resource):
         try:
             data = request.get_json()
             register_data = register_schema.load(data)
+            default_role = Role.query.filter_by(name='user').first()
+
             new_user = User(username=register_data['username'], email=register_data['email'])
+            new_user.roles.append(default_role)
             new_user.set_password(register_data['password'])
+
             db.session.add(new_user)
             db.session.commit()
+
             return {
                 'message': "Registration successful. Please proceed to login.",
                 'user': user_schema.dump(new_user)

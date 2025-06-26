@@ -1,6 +1,20 @@
 from budgetron.utils.security import bcrypt
 from budgetron.utils.db import db
 
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<Role %r>' % self.name
+
+user_roles = db.Table(
+    'user_roles',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('role_id', db.Integer, db.ForeignKey('roles.id'))
+)
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -9,6 +23,7 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
+    roles = db.relationship('Role', secondary=user_roles, backref='users', lazy='dynamic')
     transactions = db.relationship('Transaction', backref='user', lazy='dynamic')
     reports = db.relationship('Report', backref='user', lazy='dynamic')
 

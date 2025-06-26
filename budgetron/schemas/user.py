@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, validates, ValidationError, validate
 
-from budgetron.models import User
+from budgetron.models import User, Role
+
 
 class BaseUserSchema(Schema):
     username = fields.String(
@@ -32,7 +33,25 @@ class BaseUserSchema(Schema):
 
 class UserSchema(BaseUserSchema):
     id = fields.Integer(dump_only=True)
+    roles = fields.Method("get_roles", deserialize="load_roles")
     created_at = fields.DateTime(dump_only=True)
+
+    @staticmethod
+    def get_roles(obj):
+        # Serialize roles as a list of strings
+        return [role.name for role in obj.roles]
+
+    @staticmethod
+    def load_roles(value):
+        # Accept list of strings for deserialization
+        return value
+
+    @validates('roles')
+    def validate_roles(self, roles_list, data_key):
+        existing_roles = {r.name for r in Role.query.all()}
+        for role in roles_list:
+            if role not in existing_roles:
+                raise ValidationError(f"Role '{role}' does not exist.")
 
 
 class RegisterSchema(BaseUserSchema):

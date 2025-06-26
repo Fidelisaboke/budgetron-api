@@ -1,19 +1,19 @@
 from flask import request
-from flask_jwt_extended import jwt_required
 from flask_restful import Resource, abort
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
-from budgetron.models import User
+from budgetron.models import User, Role
 from budgetron.schemas import UserSchema
 from budgetron.utils.db import db
+from budgetron.utils.jwt import roles_required
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
 class UserResource(Resource):
-    @jwt_required()
+    @roles_required('admin')
     def get(self, user_id=None):
         if user_id is None:
             users = User.query.all()
@@ -25,7 +25,7 @@ class UserResource(Resource):
 
         return user_schema.dump(user), 200
 
-    @jwt_required()
+    @roles_required('admin')
     def post(self):
         try:
             data = request.get_json()
@@ -35,6 +35,12 @@ class UserResource(Resource):
             new_user.username = user_data['username']
             new_user.email = user_data['email']
             new_user.set_password(user_data['password'])
+
+            role_names = user_data['roles']
+            user_roles = Role.query.filter(Role.name.in_(role_names)).all()
+            if len(user_roles) != len(set(role_names)):
+                return {'error': 'One or more roles are invalid.'}, 404
+            new_user.roles = user_roles
 
             db.session.add(new_user)
             db.session.commit()
@@ -48,7 +54,7 @@ class UserResource(Resource):
             db.session.rollback()
             return {"error": "Username or email already exists."}, 409
 
-    @jwt_required()
+    @roles_required('admin')
     def patch(self, user_id):
         try:
             user = User.query.filter_by(id=user_id).first()
@@ -72,6 +78,13 @@ class UserResource(Resource):
                     return {"error": "Email already exists."}, 409
                 user.email = email
 
+            if "roles" in user_data:
+                role_names = user_data["roles"]
+                roles = Role.query.filter(Role.name.in_(role_names)).all()
+                if roles is None or len(roles) != len(role_names):
+                    return {"error": "One or more roles are invalid."}, 404
+                user.roles = roles
+
             if "password" in user_data:
                 user.set_password(user_data['password'])
 
@@ -85,7 +98,7 @@ class UserResource(Resource):
             db.session.rollback()
             return {"error": "An error occurred when saving user details."}, 409
 
-    @jwt_required()
+    @roles_required('admin')
     def delete(self, user_id):
         user = User.query.filter_by(id=user_id).first()
         if user is None:
