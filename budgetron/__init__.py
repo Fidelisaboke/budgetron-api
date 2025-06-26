@@ -15,6 +15,7 @@ from .resources import (
     ReportResource
 )
 from .utils.db import db
+from .utils.logging_config import setup_logging
 from .utils.security import bcrypt
 from .utils.jwt import jwt
 from .seeder.run_seeder import run_seed
@@ -28,6 +29,7 @@ def create_app():
 
     # Configurations
     app.config.from_object("budgetron.config.Config")
+    setup_logging(app)
 
     # App extensions
     api = Api(app)

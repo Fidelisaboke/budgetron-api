@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from budgetron.schemas import UserSchema, LoginSchema, RegisterSchema
 from budgetron.models import User, Role
 from budgetron.utils.db import db
+from budgetron.utils.logging_utils import log_event
 
 login_schema = LoginSchema()
 register_schema = RegisterSchema()
@@ -48,6 +49,11 @@ class RegisterResource(Resource):
 
             db.session.add(new_user)
             db.session.commit()
+
+            log_event('user_registered', details={
+                'username': new_user.username,
+                'email': new_user.email,
+            })
 
             return {
                 'message': "Registration successful. Please proceed to login.",
