@@ -7,6 +7,7 @@ from budgetron.models import User, Role
 from budgetron.schemas import UserSchema
 from budgetron.utils.db import db
 from budgetron.utils.jwt import roles_required
+from budgetron.utils.paginate import paginate_query
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -16,8 +17,12 @@ class UserListResource(Resource):
     @roles_required('admin')
     def get(self):
         """Gets all users."""
-        user = User.query.all()
-        return users_schema.dump(user), 200
+        page = request.args.get('page', type=int)
+        limit = request.args.get('limit', type=int)
+        query = User.query.order_by(User.created_at.desc())
+
+        users = paginate_query(query, users_schema, page, limit)
+        return users, 200
 
     @roles_required('admin')
     def post(self):

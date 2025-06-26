@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import request, g
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource, abort
@@ -6,6 +8,7 @@ from marshmallow import ValidationError
 from budgetron.models import Transaction, User, Category
 from budgetron.schemas import TransactionSchema
 from budgetron.utils.db import db
+from budgetron.utils.paginate import paginate_query
 from budgetron.utils.permissions import is_owner_or_admin
 
 # Transaction schema
@@ -17,12 +20,57 @@ class TransactionListResource(Resource):
     @jwt_required()
     def get(self):
         """Lists all transactions."""
-        if not g.user.is_admin:
-            transactions = Transaction.query.filter_by(user_id=g.user.id).all()
-            return transactions_schema.dump(transactions), 200
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 10, type=int)
+        query = Transaction.query
 
-        transactions = Transaction.query.all()
-        return transactions_schema.dump(transactions), 200
+        # Restrict to current user if not admin
+        if not g.user.is_admin:
+            query = query.filter_by(user_id=g.user.id)
+
+        # Optional transaction filters
+        category_id = request.args.get('category_id', type=int)
+        transaction_type = request.args.get('type')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        min_amount = request.args.get('min_amount', type=float)
+        max_amount = request.args.get('max_amount', type=float)
+        search = request.args.get('search', type=str)
+
+        if category_id:
+            query = query.filter_by(category_id=category_id)
+
+        if transaction_type:
+            query = query.join(Transaction.category).filter_by(type=transaction_type)
+
+        if start_date:
+            try:
+                start = datetime.fromisoformat(start_date)
+                query = query.filter(Transaction.timestamp >= start)
+            except ValueError:
+                return abort(400, message="Invalid start date format. Use ISO format (YYYY-MM-DD).")
+
+        if end_date:
+            try:
+                end = datetime.fromisoformat(end_date)
+                query = query.filter(Transaction.timestamp <= end)
+            except ValueError:
+                return abort(400, message="Invalid end date format. Use ISO format (YYYY-MM-DD).")
+
+        if min_amount is not None:
+            query = query.filter(Transaction.amount >= min_amount)
+
+        if max_amount is not None:
+            query = query.filter(Transaction.amount <= max_amount)
+
+        if search:
+            query = query.filter(Transaction.description.ilike(f'%{search}%'))
+
+        # Sort by timestamp descending
+        query = query.order_by(Transaction.timestamp.desc())
+
+        transactions = paginate_query(query=query, schema=transactions_schema, page=page, limit=limit)
+        return transactions, 200
 
     @jwt_required()
     def post(self):

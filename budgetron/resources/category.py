@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import request
 from flask_restful import Resource, abort
 from flask_jwt_extended import jwt_required
@@ -7,6 +9,7 @@ from budgetron.models import Category
 from budgetron.schemas import CategorySchema
 from budgetron.utils.db import db
 from budgetron.utils.jwt import roles_required
+from budgetron.utils.paginate import paginate_query
 
 # Category schema
 category_schema = CategorySchema()
@@ -17,7 +20,17 @@ class CategoryListResource(Resource):
     @jwt_required()
     def get(self):
         """List all categories."""
-        categories = Category.query.all()
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 10, type=int)
+        query = Category.query
+
+        # Optional category filters
+        category_type = request.args.get('type')
+
+        if category_type:
+            query = query.filter_by(type=category_type)
+
+        categories = paginate_query(query, categories_schema, page, limit)
         return categories_schema.dump(categories), 200
 
     @roles_required('admin')

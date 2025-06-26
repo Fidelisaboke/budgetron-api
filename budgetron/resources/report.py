@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import request, g
 from flask_restful import Resource, abort
 from flask_jwt_extended import jwt_required
@@ -6,6 +8,7 @@ from marshmallow import ValidationError
 from budgetron.models import Report, User
 from budgetron.schemas import ReportSchema
 from budgetron.utils.db import db
+from budgetron.utils.paginate import paginate_query
 from budgetron.utils.permissions import is_owner_or_admin
 
 # Report schema
@@ -17,11 +20,39 @@ class ReportListResource(Resource):
     @jwt_required()
     def get(self):
         """Lists all reports."""
-        if not g.user.is_admin:
-            reports = Report.query.filter_by(user_id=g.user.id).all()
-            return reports_schema.dump(reports), 200
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 10, type=int)
+        query = Report.query
 
-        reports = Report.query.all()
+        if not g.user.is_admin:
+            query = query.filter_by(user_id=g.user.id).all()
+
+        # Optional report filters
+        report_format = request.args.get('format', type=str)
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        if report_format:
+            query = query.filter_by(format=report_format)
+
+        if start_date:
+            try:
+                start = datetime.fromisoformat(start_date)
+                query = query.filter(Report.created_at >= start)
+            except ValueError:
+                abort(400, message="Invalid start date format. Use ISO format YYYY-MM-DD).")
+
+        if end_date:
+            try:
+                end = datetime.fromisoformat(end_date)
+                query = query.filter(Report.created_at <= end)
+            except ValueError:
+                abort(400, message="Invalid end date format. Use ISO format YYYY-MM-DD).")
+
+        # Sort by descending created at
+        query = query.order_by(Report.created_at.desc())
+
+        reports = paginate_query(query, reports_schema, page, limit)
         return report_schema.dump(reports), 200
 
     @jwt_required()
