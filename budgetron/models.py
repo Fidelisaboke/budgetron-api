@@ -27,6 +27,11 @@ class User(db.Model):
     transactions = db.relationship('Transaction', backref='user', lazy='dynamic')
     reports = db.relationship('Report', backref='user', lazy='dynamic')
 
+    @property
+    def is_admin(self):
+        """Checks whether the user is an admin."""
+        return any(role.name == 'admin' for role in self.roles)
+
     def __repr__(self):
         return f'<User {self.username}>'
 

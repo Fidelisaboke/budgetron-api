@@ -6,26 +6,45 @@ from marshmallow import ValidationError
 from budgetron.models import Category
 from budgetron.schemas import CategorySchema
 from budgetron.utils.db import db
+from budgetron.utils.jwt import roles_required
 
 # Category schema
 category_schema = CategorySchema()
 categories_schema = CategorySchema(many=True)
 
 
-class CategoryResource(Resource):
+class CategoryListResource(Resource):
     @jwt_required()
-    def get(self, category_id=None):
-        if category_id is None:
-            categories = Category.query.all()
-            return categories_schema.dump(categories), 200
+    def get(self):
+        """List all categories."""
+        categories = Category.query.all()
+        return categories_schema.dump(categories), 200
 
+    @roles_required('admin')
+    def post(self):
+        """Creates a new transaction."""
+        try:
+            data = request.get_json()
+            category_data = category_schema.load(data)
+            new_category = Category(**category_data)
+            db.session.add(new_category)
+            db.session.commit()
+            return category_schema.dump(new_category), 201
+
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+
+class CategoryDetailResource(Resource):
+    @jwt_required()
+    def get(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
             abort(404, message="Category not found.")
 
         return category_schema.dump(category), 200
 
-    @jwt_required()
+    @roles_required('admin')
     def post(self):
         try:
             data = request.get_json()
@@ -38,7 +57,7 @@ class CategoryResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
-    @jwt_required()
+    @roles_required('admin')
     def patch(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
@@ -64,7 +83,7 @@ class CategoryResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
-    @jwt_required()
+    @roles_required('admin')
     def delete(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
