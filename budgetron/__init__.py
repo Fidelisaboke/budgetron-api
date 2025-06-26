@@ -12,9 +12,11 @@ from .resources import (
     RegisterResource,
     ProfileResource,
     UserResource,
-    CategoryResource,
+    CategoryListResource,
+    CategoryDetailResource,
     TransactionListResource,
     TransactionDetailResource,
+    ReportListResource,
     ReportDetailResource
 )
 from .utils.db import db
@@ -48,19 +50,25 @@ def create_app():
     except OSError:
         pass
 
-    # Resources
+    # Auth Resources
     api.add_resource(LoginResource, '/api/auth/login/')
     api.add_resource(RegisterResource, '/api/auth/register/')
     api.add_resource(ProfileResource, '/api/auth/me/')
+
+    # User resource
     api.add_resource(UserResource, '/api/users/', '/api/users/<int:user_id>')
-    api.add_resource(CategoryResource, '/api/categories/', '/api/categories/<int:category_id>')
+
+    # Category resource
+    api.add_resource(CategoryListResource, '/api/categories/')
+    api.add_resource(CategoryDetailResource, '/api/categories/<int:category_id>')
 
     # Transaction resource
     api.add_resource(TransactionListResource, '/api/transactions/')
     api.add_resource(TransactionDetailResource, '/api/transactions/<int:transaction_id>')
 
     # Report resource
-    api.add_resource(ReportDetailResource, '/api/reports/', '/api/reports/<int:report_id>')
+    api.add_resource(ReportListResource, '/api/reports/')
+    api.add_resource(ReportDetailResource, '/api/reports/<int:report_id>')
 
     # Commands
     app.cli.add_command(create_admin)
