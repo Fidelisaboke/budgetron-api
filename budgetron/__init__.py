@@ -17,8 +17,11 @@ from .resources import (
 from .utils.db import db
 from .utils.security import bcrypt
 from .utils.jwt import jwt
+from .seeder.run_seeder import run_seed
+from .commands import create_admin, seed
 
 migrate = Migrate()
+
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -47,6 +50,10 @@ def create_app():
     api.add_resource(CategoryResource, '/api/categories/', '/api/categories/<int:category_id>')
     api.add_resource(TransactionResource, '/api/transactions/', '/api/transactions/<int:transaction_id>')
     api.add_resource(ReportResource, '/api/reports/', '/api/reports/<int:report_id>')
+
+    # Commands
+    app.cli.add_command(create_admin)
+    app.cli.add_command(seed)
 
     # Index route
     @app.route('/')
