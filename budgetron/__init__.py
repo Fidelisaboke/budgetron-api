@@ -11,7 +11,8 @@ from .resources import (
     LoginResource,
     RegisterResource,
     ProfileResource,
-    UserResource,
+    UserListResource,
+    UserDetailResource,
     CategoryListResource,
     CategoryDetailResource,
     TransactionListResource,
@@ -56,7 +57,8 @@ def create_app():
     api.add_resource(ProfileResource, '/api/auth/me/')
 
     # User resource
-    api.add_resource(UserResource, '/api/users/', '/api/users/<int:user_id>')
+    api.add_resource(UserListResource, '/api/auth/users/')
+    api.add_resource(UserDetailResource,  '/api/users/<int:user_id>')
 
     # Category resource
     api.add_resource(CategoryListResource, '/api/categories/')

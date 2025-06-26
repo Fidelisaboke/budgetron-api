@@ -12,18 +12,12 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
-class UserResource(Resource):
+class UserListResource(Resource):
     @roles_required('admin')
-    def get(self, user_id=None):
-        if user_id is None:
-            users = User.query.all()
-            return users_schema.dump(users), 200
-
-        user = User.query.filter_by(id=user_id).first()
-        if user is None:
-            abort(404, message="User not found.")
-
-        return user_schema.dump(user), 200
+    def get(self):
+        """Gets all users."""
+        user = User.query.all()
+        return users_schema.dump(user), 200
 
     @roles_required('admin')
     def post(self):
@@ -53,6 +47,16 @@ class UserResource(Resource):
         except IntegrityError:
             db.session.rollback()
             return {"error": "Username or email already exists."}, 409
+
+
+class UserDetailResource(Resource):
+    @roles_required('admin')
+    def get(self, user_id):
+        user = User.query.filter_by(id=user_id).first()
+        if user is None:
+            abort(404, message="User not found.")
+
+        return user_schema.dump(user), 200
 
     @roles_required('admin')
     def patch(self, user_id):
