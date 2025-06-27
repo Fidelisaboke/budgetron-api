@@ -78,3 +78,16 @@ class Report(db.Model):
     format = db.Column(db.String(10), nullable=False)
     file_url = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+
+class Budget(db.Model):
+    __tablename__ = 'budgets'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    month = db.Column(db.String(7), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'category_id', 'month', name='unique_budget'),)
