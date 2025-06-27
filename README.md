@@ -1,6 +1,6 @@
 # Budgetron
 ## Project Overview
-Budgetron is a web-based personal finance management API that allows users to categorize transactions, create monthly 
+Budgetron is a web-based personal finance management application that allows users to categorize transactions, create monthly 
 budgets, and generate downloadable reports.
 
 ## Table of Contents
