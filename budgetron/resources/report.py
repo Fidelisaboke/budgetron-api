@@ -6,7 +6,8 @@ from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
 
 from budgetron.models import Report, User
-from budgetron.schemas import ReportSchema
+from budgetron.schemas import ReportSchema, ReportInputSchema
+from budgetron.services.report_service import generate_transaction_summary, save_csv_report
 from budgetron.utils.db import db
 from budgetron.utils.paginate import paginate_query
 from budgetron.utils.permissions import is_owner_or_admin
@@ -14,6 +15,7 @@ from budgetron.utils.permissions import is_owner_or_admin
 # Report schema
 report_schema = ReportSchema()
 reports_schema = ReportSchema(many=True)
+report_input_schema = ReportInputSchema()
 
 
 class ReportListResource(Resource):
@@ -57,14 +59,36 @@ class ReportListResource(Resource):
 
     @jwt_required()
     def post(self):
-        """Creates a new report."""
+        """Generate a new financial report from user transactions."""
         try:
             data = request.get_json()
-            report_data = report_schema.load(data)
-            new_report = Report(**report_data)
-            db.session.add(new_report)
+            report_data = report_input_schema.load(data)
+            month = report_data['month']
+            report_format = report_data['format']
+
+            user_id = data.get('user_id', g.user.id)
+
+            if not g.user.is_admin and user_id != g.user.id:
+                abort(403, message="Unauthorized.")
+
+            # TODO: Add support for exporting reports in pdf or xlsx format.
+            if report_format != 'csv':
+                abort(400, message="Only CSV format is supported for now.")
+
+            rows = generate_transaction_summary(user_id=user_id, month=month)
+            if not rows:
+                abort(404, message="No transactions found.")
+
+            file_url = save_csv_report(user_id, rows, month)
+            if not file_url:
+                abort(500, message="Server error: Unable to save report.")
+
+            report = Report(user_id=user_id, format=report_format, file_url=file_url)
+            db.session.add(report)
             db.session.commit()
-            return report_schema.dump(new_report), 201
+
+            return report_schema.dump(report), 201
+
         except ValidationError as err:
             return {"errors": err.messages}, 400
 

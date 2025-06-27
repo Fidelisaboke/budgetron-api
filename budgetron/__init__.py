@@ -47,9 +47,16 @@ def create_app():
     bcrypt.init_app(app)
     jwt.init_app(app)
 
-    # Create instance directory
+    # Ensure instance directory exists
     try:
         os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    # Ensure static/reports directory exists
+    try:
+        reports_dir = os.path.join(app.root_path, 'static', 'reports')
+        os.makedirs(reports_dir)
     except OSError:
         pass
 
