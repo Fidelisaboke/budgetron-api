@@ -53,7 +53,7 @@ class ReportListResource(Resource):
         query = query.order_by(Report.created_at.desc())
 
         reports = paginate_query(query, reports_schema, page, limit)
-        return report_schema.dump(reports), 200
+        return reports, 200
 
     @jwt_required()
     def post(self):

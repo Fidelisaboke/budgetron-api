@@ -17,11 +17,10 @@ class UserListResource(Resource):
     @roles_required('admin')
     def get(self):
         """Gets all users."""
-        page = request.args.get('page', type=int)
-        limit = request.args.get('limit', type=int)
-        query = User.query.order_by(User.created_at.desc())
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 10, type=int)
 
-        users = paginate_query(query, users_schema, page, limit)
+        users = paginate_query(User.query, users_schema, page, limit)
         return users, 200
 
     @roles_required('admin')

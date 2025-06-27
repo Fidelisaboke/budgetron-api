@@ -29,7 +29,7 @@ class CategoryListResource(Resource):
             query = query.filter_by(type=category_type)
 
         categories = paginate_query(query, categories_schema, page, limit)
-        return categories_schema.dump(categories), 200
+        return categories, 200
 
     @roles_required('admin')
     def post(self):
