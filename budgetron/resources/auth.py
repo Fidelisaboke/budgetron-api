@@ -1,6 +1,6 @@
 from flask import request
 from flask_jwt_extended import create_access_token
-from flask_restful import Resource
+from flask_restful import Resource, abort
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
@@ -43,6 +43,14 @@ class RegisterResource(Resource):
             data = request.get_json()
             register_data = register_schema.load(data)
             default_role = Role.query.filter_by(name='user').first()
+            if not default_role:
+                log_event(
+                    action='default_role_not_found',
+                    status='failure',
+                    level='error',
+                    details={'error': 'Default role not found in database.'}
+                )
+                abort(500, message='Oops! Something went wrong. Please contact support.')
 
             new_user = User(username=register_data['username'], email=register_data['email'])
             new_user.roles.append(default_role)
