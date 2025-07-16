@@ -1,9 +1,10 @@
 import os
 
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, request
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from flask_migrate import Migrate
 from flask_restful import Api
+from flask_cors import CORS
 from jwt import ExpiredSignatureError
 
 from .config import Config
@@ -40,12 +41,16 @@ def create_app():
     app.config.from_object("budgetron.config.Config")
     setup_logging(app)
 
+    # Get the frontend URL
+    frontend_url = os.getenv("FRONTEND_URL")
+
     # App extensions
     api = Api(app)
     db.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    CORS(app, resources={r"/api/*": {"origins": frontend_url}})
 
     # Ensure instance directory exists
     try:
@@ -91,11 +96,31 @@ def create_app():
 
     @app.before_request
     def load_user_from_jwt():
+        # Skip for OPTIONS requests (CORS preflight)
+        if request.method == "OPTIONS":
+            return
+
+        # List of unauthenticated endpoints
+        unauthenticated_paths = [
+            "/api/auth/login/",
+            "/api/auth/register/",
+        ]
+        if request.path in unauthenticated_paths:
+            return
+
+        # Only try to load JWT if Authorization header is present
+        auth_header = request.headers.get("Authorization", None)
+        if not auth_header:
+            g.user = None
+            return
+
         try:
             verify_jwt_in_request(optional=True)
             user_id = get_jwt_identity()
             if user_id:
                 g.user = User.query.get(user_id)
+            else:
+                g.user = None
         except ExpiredSignatureError:
             g.user = None
             log_event(action='load_user_from_jwt', level='error', status='failure', details={'msg': 'Token expired'})
