@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validates, ValidationError, validate
+from marshmallow import Schema, fields, validates, ValidationError, validate, validates_schema
 
 from budgetron.models import User, Role
 
@@ -56,8 +56,16 @@ class UserSchema(BaseUserSchema):
 
 
 class RegisterSchema(BaseUserSchema):
-    pass
+    confirm_password = fields.String(
+        required=True,
+        load_only=True,
+        validate=validate.Length(min=8, max=255, error="Password must be at least 8 characters long.")
+    )
 
+    @validates_schema
+    def validate_password_match(self, data, **kwargs):
+        if data.get('password') != data.get('confirm_password'):
+            raise ValidationError({'confirm_password': ["Passwords do not match."]})
 
 class LoginSchema(Schema):
     email = fields.Email(required=True)
