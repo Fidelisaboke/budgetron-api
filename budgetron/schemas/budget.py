@@ -32,7 +32,7 @@ class BudgetSchema(Schema):
                 db.session.query(func.sum(Transaction.amount)).join(Category).filter(
                     Transaction.user_id == obj.user_id,
                     Transaction.category_id == obj.category_id,
-                    func.to_char(Transaction.timestamp, '%Y-%m') == obj.month,
+                    func.to_char(Transaction.timestamp, 'YYYY-MM') == obj.month,
                     Category.type == 'expense',
                 ).scalar() or 0.0
         )
