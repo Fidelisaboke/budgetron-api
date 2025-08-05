@@ -42,7 +42,7 @@ def create_app():
     setup_logging(app)
 
     # Get the frontend URL
-    frontend_url = os.getenv("FRONTEND_URL")
+    frontend_url = os.getenv("FRONTEND_URL").split(',')
 
     # App extensions
     api = Api(app)
