@@ -50,7 +50,13 @@ def create_app():
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": frontend_url}})
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": frontend_url}},
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    )
 
     # Ensure instance directory exists
     try:
