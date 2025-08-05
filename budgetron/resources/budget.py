@@ -29,7 +29,7 @@ class BudgetListResource(Resource):
         max_amount = request.args.get('max_amount')
 
         if not g.user.is_admin:
-            query = query.filter_by(user_id=g.user.id).all()
+            query = query.filter_by(user_id=g.user.id)
 
         if month:
             try:

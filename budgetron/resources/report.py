@@ -27,7 +27,7 @@ class ReportListResource(Resource):
         query = Report.query
 
         if not g.user.is_admin:
-            query = query.filter_by(user_id=g.user.id).all()
+            query = query.filter_by(user_id=g.user.id)
 
         # Optional report filters
         report_format = request.args.get('format', type=str)
