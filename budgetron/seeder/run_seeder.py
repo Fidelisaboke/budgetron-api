@@ -1,8 +1,10 @@
 from budgetron.seeder.seed_roles import seed_roles
+from budgetron.seeder.seed_categories import seed_categories
 
 SEEDERS = {
     "roles": seed_roles,
-    "all": lambda: [f() for f in [seed_roles]],
+    "categories": seed_categories,
+    "all": lambda: [f() for f in [seed_roles, seed_categories]],
 }
 
 
