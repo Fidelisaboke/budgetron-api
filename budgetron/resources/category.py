@@ -6,7 +6,6 @@ from marshmallow import ValidationError
 from budgetron.models import Category, User
 from budgetron.schemas import CategorySchema
 from budgetron.utils.db import db
-from budgetron.utils.jwt import roles_required
 from budgetron.utils.paginate import paginate_query
 
 # Category schema
@@ -56,8 +55,9 @@ class CategoryListResource(Resource):
             data = request.get_json()
 
             # Load with user_id context to validate per-user uniqueness
-            category_data = category_schema.load(data, context={"user_id": g.user.id})
-
+            category_schema.current_user_id = g.user.id
+            category_schema.is_admin = g.user.is_admin
+            category_data = category_schema.load(data)
 
             # Create a new category
             new_category = Category(
@@ -89,7 +89,7 @@ class CategoryDetailResource(Resource):
         return category_schema.dump(category), 200
 
 
-    @roles_required('admin')
+    @jwt_required()
     def patch(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
@@ -127,7 +127,7 @@ class CategoryDetailResource(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
-    @roles_required('admin')
+    @jwt_required()
     def delete(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         if category is None:
