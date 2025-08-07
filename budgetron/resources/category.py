@@ -24,19 +24,24 @@ class CategoryListResource(Resource):
         """
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', 10, type=int)
-        query = Category.query
-
-        # Optional category filters
         category_type = request.args.get('type')
+        search_query = request.args.get('search', '', type=str)
+
+        query = Category.query
 
         # Filter for default or user-owned categories
         if not g.user.is_admin:
             query = query.filter((Category.is_default == True) | (Category.user_id == g.user.id))
 
-        if category_type:
+        # Type filter
+        if category_type and category_type != "all":
             query = query.filter_by(type=category_type)
 
-        categories = paginate_query(query, categories_schema, page, limit)
+        # Search filter
+        if search_query:
+            query = query.filter(Category.name.ilike(f"{search_query}%"))
+
+        categories = paginate_query(query.order_by(Category.name.asc()), categories_schema, page, limit)
         return categories, 200
     
 
